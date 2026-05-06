@@ -526,7 +526,7 @@ const FORM_SCHEMA = {
 // CONFIG — paste your Apps Script Web App URL here after deploying intake_apps_script.gs
 // (separate deployment from the contractor form)
 // =========================================================
-const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzCvfhzVlFQhEPdEzX3lQ-X3U8IO8T97FdoWyTgYxZrezTQyJy5J39Bvggp2jpO5aso/exec";
+const APPS_SCRIPT_URL = "";
 
 // =========================================================
 // Optional: Google Places Autocomplete for the Address field
@@ -1073,10 +1073,12 @@ function renderSection() {
     });
   }
 
-  // Show/hide submit zone on last section
+  // Show/hide submit zone on last section. Hide the Next button on last section —
+  // the Submit button below is the only forward action.
   const last = STATE.currentSection === FORM_SCHEMA.sections.length - 1;
   document.getElementById('submitWrap').classList.toggle('hidden', !last);
-  document.getElementById('nextBtn').textContent = last ? 'Review →' : 'Next →';
+  document.getElementById('nextBtn').classList.toggle('hidden', last);
+  document.getElementById('nextBtn').textContent = 'Next →';
   document.getElementById('prevBtn').disabled = STATE.currentSection === 0;
   document.getElementById('prevBtn').classList.toggle('opacity-50', STATE.currentSection === 0);
   // (Skip-section button is omitted in this form.)
