@@ -76,6 +76,15 @@
     background:#B07D4A; color:#FEFDFB; padding:10px 18px; border-radius:8px; font-weight:600;
   }
   .btn-copper:hover { background:#C4915E; }
+  .svc { display:flex; gap:12px; align-items:flex-start; width:100%; text-align:left; background:#FEFDFB;
+    border:1px solid #C5D8CC; border-radius:12px; padding:12px 14px; cursor:pointer; }
+  .svc:hover { border-color:#7A9E8A; }
+  .svc[aria-pressed="true"] { border:2px solid #1E4430; padding:11px 13px; background:#F1F6F2; }
+  .svc .dot { width:16px; height:16px; border-radius:50%; border:2px solid #7A9E8A; flex-shrink:0; margin-top:3px; }
+  .svc[aria-pressed="true"] .dot { border-color:#1E4430; background:radial-gradient(#1E4430 45%, transparent 50%); }
+  .svc-price { font-weight:600; color:#1E4430; white-space:nowrap; }
+  .tag-rec { display:inline-block; font-size:11px; letter-spacing:.08em; text-transform:uppercase; font-weight:700;
+    color:#FEFDFB; background:#B07D4A; border-radius:4px; padding:2px 6px; margin-left:6px; vertical-align:2px; }
   .sec-link {
     display:flex; align-items:center; gap:10px; padding:8px 12px; border-radius:8px;
     color:#3A3A3A; cursor:pointer; font-size:14px; line-height:1.3;
@@ -151,12 +160,12 @@
          class="block h-20 w-auto mb-3">
     <h1 class="text-3xl mb-3">New Project Inquiry</h1>
     <p class="text-twb-text mb-4">
-      Thank you for your interest in working with The Well Build™. To make our consultation as valuable
-      as possible, please complete this short questionnaire — it usually takes about 3 minutes.
+      Thank you for your interest in working with The Well Build™. Tell us about your project and
+      we'll point you to the service that fits it. It usually takes about 3 minutes.
     </p>
     <ul class="space-y-2 text-sm text-twb-text mb-5">
       <li class="flex gap-2"><span class="text-twb-green flex-shrink-0">●</span><span>Roughly <strong>3 minutes</strong> to fill out.</span></li>
-      <li class="flex gap-2"><span class="text-twb-green flex-shrink-0">●</span><span>Your responses help us prepare tailored guidance for our call.</span></li>
+      <li class="flex gap-2"><span class="text-twb-green flex-shrink-0">●</span><span>At the end, we'll recommend a service and show pricing for a home your size.</span></li>
     </ul>
     <div class="flex flex-wrap gap-3">
       <button id="introStart" class="btn-primary">Start →</button>
@@ -174,7 +183,14 @@
          alt="The Well Build"
          class="mx-auto h-20 w-auto mb-3">
     <h1 class="text-3xl mb-2">Thank you — submission received!</h1>
-    <p class="text-twb-text mb-5 text-left">
+    <div id="specBookFit" class="hidden bg-twb-cream rounded-xl p-4 text-left mb-5" style="border:1px solid #B07D4A">
+      <div class="font-semibold text-twb-green mb-1">Your project looks like a fit for The Well Build Spec Book</div>
+      <p class="text-sm text-twb-text mb-3">You have drawings and you're looking for a written review. The Spec Book reviews
+        your plans and specifies key areas such as envelope, waterproofing, insulation, plumbing and electrical.
+        $5,000 for homes under 7,500 sq ft, typically delivered in 7–10 business days.</p>
+      <a href="https://www.thewellbuild.com/products/healthy-home-spec-book" class="btn-primary inline-block">See the Spec Book →</a>
+    </div>
+    <p id="doneDefault" class="text-twb-text mb-5 text-left">
       Thank you for your inquiry. Due to high demand and our commitment to high-quality service,
       we are currently being selective with new projects. We will review your form and reach out
       if there's a potential fit.
@@ -183,7 +199,7 @@
       <div class="font-semibold text-twb-green mb-2">A couple notes</div>
       <ul class="list-disc pl-5 space-y-1 text-twb-text">
         <li>If you don't hear from us within a few business days, please check your spam folder.</li>
-        <li>Projects we cannot immediately take on will be added to our waitlist.</li>
+        <li>Master Plan and construction projects we cannot take on right away are added to our waitlist.</li>
         <li>Thank you again for your interest in working with us!</li>
       </ul>
     </div>
@@ -240,14 +256,14 @@
 
     <!-- Submit button (revealed on last section) -->
     <div id="submitWrap" class="mt-6 hidden">
-      <div class="bg-twb-cream2 border border-twb-sage2 rounded-2xl p-6">
-        <h2 class="text-2xl mb-2">Ready to submit?</h2>
+      <div id="recoIntro" class="bg-twb-cream2 border border-twb-sage2 rounded-2xl p-6">
+        <h2 class="text-2xl mb-2">See which service fits</h2>
         <p class="text-twb-text mb-4">
-          Double-check that the required fields in <strong>Contact Information</strong> are filled out.
-          When you submit, your inquiry goes straight to The Well Build team for review.
+          Based on your answers, we'll recommend a service and show what each one costs for a home your size.
         </p>
-        <button id="submitBtn" class="btn-copper text-base">Submit inquiry</button>
+        <button id="recoBtn" class="btn-copper text-base">See my recommendation →</button>
       </div>
+      <div id="recoPanel" class="hidden bg-twb-cream2 border border-twb-sage2 rounded-2xl p-6"></div>
     </div>
   </main>
 </div>
@@ -260,8 +276,8 @@
 // Source: Typeform DqB3pEnr + Greg's approved cuts/edits.
 const FORM_SCHEMA = {
   title: `The Well Build — New Project Inquiry`,
-  description: `Thank you for your interest in working with The Well Build™. To make our consultation as valuable as possible, please complete this short questionnaire — it usually takes about 3 minutes.`,
-  intro_subhead: `Tell us about your project so we can prepare tailored guidance for our call.`,
+  description: `Thank you for your interest in working with The Well Build™. Tell us about your project and we'll point you to the service that fits it. It usually takes about 3 minutes.`,
+  intro_subhead: `Tell us about your project so we can point you to the right service.`,
   completion: {
     title: `Thank you — submission received!`,
     body: `Thank you for your inquiry. Due to high demand and our commitment to high-quality service, we are currently being selective with new projects. We'll review your form and reach out if there's a potential fit. If you don't hear from us within a few business days, please check your spam folder. Projects we cannot immediately take on will be added to our waitlist. Thank you again for your interest in working with us!`
@@ -344,17 +360,41 @@ const FORM_SCHEMA = {
         },
         {
           type: `radio`,
-          label: `Approximate square footage`,
+          label: `Approximate conditioned square footage`,
+          helper: `Heated and cooled space, including finished basements and attics.`,
           required: true,
           choices: [
-            `Under 1,000`,
-            `1,000–3,000`,
-            `3,000–5,000`,
-            `5,000–7,000`,
-            `7,000–10,000`,
+            `Under 3,000`,
+            `3,000–4,999`,
+            `5,000–7,499`,
+            `7,500–9,999`,
             `10,000+`
           ],
           id: `sq_ft`
+        },
+        {
+          type: `radio`,
+          label: `Where are your drawings?`,
+          required: true,
+          choices: [
+            `No drawings yet`,
+            `Early design`,
+            `Permit set`,
+            `Construction set`,
+            `Not sure`
+          ],
+          id: `design_stage`
+        },
+        {
+          type: `radio`,
+          label: `Has a builder been selected?`,
+          required: true,
+          choices: [
+            `Yes`,
+            `Bidding now`,
+            `Not yet`
+          ],
+          id: `builder_status`
         }
       ]
     },
@@ -410,8 +450,6 @@ const FORM_SCHEMA = {
           required: true,
           choices: [
             `Architect or designer`,
-            `Builder or contractor selected`,
-            `Plans or drawings`,
             `Material selections made`,
             `Environmental testing completed (mold, air quality, etc.)`,
             `Starting from scratch`
@@ -444,15 +482,15 @@ const FORM_SCHEMA = {
         {
           type: `radio`,
           label: `Do you have a budget established for healthy home consulting?`,
-          helper: `Our full project services are highly intensive and require a meaningful investment. If you're seeking answers to a specific question only, we offer hourly consulting blocks via our website.`,
+          helper: `Our services range from a single $999 strategy call to full-service guidance through construction. This helps us suggest the right fit.`,
           required: true,
           choices: [
-            `$10K–$20K`,
-            `$20K–$30K`,
-            `$30K–$50K`,
-            `$50K–$100K`,
-            `Whatever it takes`,
-            `No budget established`
+            `Under $5K`,
+            `$5K–$10K`,
+            `$10K–$25K`,
+            `$25K–$50K`,
+            `$50K+`,
+            `Not sure yet`
           ],
           id: `consulting_budget`
         }
@@ -464,16 +502,16 @@ const FORM_SCHEMA = {
       description: ``,
       items: [
         {
-          type: `checkboxes`,
-          label: `What kind of support are you looking for? (Select all that apply)`,
-          helper: `For one-off questions, we also offer hourly consulting blocks on our website.`,
+          type: `radio`,
+          label: `What kind of support are you looking for?`,
+          helper: `Pick the one closest to what you need.`,
           required: true,
           choices: [
-            `Ongoing advisory throughout project`,
-            `Plan review and recommendations (no ongoing advisory)`,
-            `Problem diagnosis and remediation guidance`,
-            `Contractor / professional vetting or referrals`,
-            `Troubleshooting existing problems`
+            `A written review of my drawings, with specifications (Spec Book)`,
+            `Hands-on guidance through design, with my architect and builder (Master Plan)`,
+            `Oversight during construction (Build Phase / Full-Service)`,
+            `Help with one specific question (Strategy call)`,
+            `Not sure — help me decide`
           ],
           allowOther: true,
           id: `support_type`
@@ -513,7 +551,7 @@ const FORM_SCHEMA = {
       items: [
         {
           type: `paragraph`,
-          label: `Anything else we should know, or specific questions you'd like covered on our consultation call?`,
+          label: `Anything else we should know, or specific questions you have?`,
           required: false,
           id: `anything_else`
         }
@@ -1077,6 +1115,7 @@ function renderSection() {
   // the Submit button below is the only forward action.
   const last = STATE.currentSection === FORM_SCHEMA.sections.length - 1;
   document.getElementById('submitWrap').classList.toggle('hidden', !last);
+  if (!last && typeof hideRecommendation === 'function') hideRecommendation();
   document.getElementById('nextBtn').classList.toggle('hidden', last);
   document.getElementById('nextBtn').textContent = 'Next →';
   document.getElementById('prevBtn').disabled = STATE.currentSection === 0;
@@ -1415,14 +1454,24 @@ function buildSubmissionPayload() {
     project_timeline: r.project_timeline || '',
     sq_ft: r.sq_ft || ''
   };
-  return { sections, cover, responses: STATE.responses, skipped: STATE.skipped };
+  const chosen = CHOSEN || (RECO && RECO.key) || '';
+  const screening = {
+    recommended_service: RECO ? SERVICES[RECO.key].name : '',
+    chosen_service: chosen ? SERVICES[chosen].name : '',
+    quoted_price: chosen ? priceLabel(chosen) : '',
+    next_step: ({ spec_book_checkout: 'Went to Spec Book checkout', strategy_call_checkout: 'Went to strategy call checkout', call_request: 'Requested a call' })[_nextStep] || '',
+    budget_fit: !chosen ? '' : (budgetCap() == null ? 'Budget not shared' : (affordable(chosen) ? 'Within budget' : 'Above stated budget')),
+    recommendation_reason: RECO ? RECO.reasons.join(' ') : ''
+  };
+  Object.assign(cover, screening);
+  return { sections, cover, responses: Object.assign({}, STATE.responses, screening), skipped: STATE.skipped };
 }
 
 // =========================================================
 // SUBMIT
 // =========================================================
-async function submitForm() {
-  // Validate required
+let _submitInFlight = false;
+function validateRequired() {
   const missing = [];
   flatItems().forEach(q => {
     const sec = FORM_SCHEMA.sections[q.sectionIndex];
@@ -1439,13 +1488,34 @@ async function submitForm() {
       const node = document.querySelector(`[data-qid="${first.id}"]`);
       if (node) { node.scrollIntoView({behavior:'smooth', block:'center'}); node.style.borderColor = '#A8593E'; }
     }, 300);
+    return false;
+  }
+  return true;
+}
+
+let _nextStep = '';
+async function submitForm(nextStep) {
+  // Guard against double-clicks while a submission is in flight.
+  if (_submitInFlight) return;
+  if (!validateRequired()) return;
+  _nextStep = nextStep || 'call_request';
+  if (!APPS_SCRIPT_URL) {
+    // DRAFT preview: show the thank-you screen without sending anything
+    showDone(_nextStep);
     return;
   }
-  if (!APPS_SCRIPT_URL) {
-    showToast('Apps Script URL not configured. Cannot submit yet — see deployment instructions in apps_script.gs.', 5000);
-    return;
+  // Lock the submit button so a second click doesn't create a duplicate submission.
+  _submitInFlight = true;
+  const btn = document.getElementById('ctaPrimary');
+  const originalLabel = btn ? btn.textContent : '';
+  if (btn) {
+    btn.disabled = true;
+    btn.textContent = 'Submitting…';
+    btn.style.opacity = '0.65';
+    btn.style.cursor = 'wait';
   }
   showToast('Submitting…');
+
   try {
     const res = await postJson({
       action: 'submit',
@@ -1459,19 +1529,204 @@ async function submitForm() {
       if (location.search.includes('draft=')) {
         history.replaceState({},'',location.pathname);
       }
-      document.getElementById('doneOverlay').classList.remove('hidden');
+      showDone(_nextStep);
     } else {
       showToast('Submission failed. Please try again.', 4000);
+      if (btn) { btn.disabled = false; btn.textContent = originalLabel; btn.style.opacity = ''; btn.style.cursor = ''; }
+      _submitInFlight = false;
     }
   } catch(e) {
     console.error(e);
     showToast('Network error during submission.', 4000);
+    if (btn) { btn.disabled = false; btn.textContent = originalLabel; btn.style.opacity = ''; btn.style.cursor = ''; }
+    _submitInFlight = false;
   }
 }
-document.getElementById('submitBtn').addEventListener('click', submitForm);
+document.getElementById('recoBtn').addEventListener('click', showRecommendation);
 document.getElementById('doneClose').addEventListener('click', () => {
   document.getElementById('doneOverlay').classList.add('hidden');
 });
+
+// =========================================================
+// RECOMMENDATION
+// Prices from TWB Plan Review/service-packages-q4-2026.html (2026-11-10).
+// Tiers: 0 = up to 4,999 sq ft, 1 = 5,000–7,499, 2 = 7,500–9,999, 3 = 10,000+. null = Inquire.
+// =========================================================
+const SPEC_BOOK_URL      = 'https://www.thewellbuild.com/products/healthy-home-spec-book';
+const STRATEGY_CALL_URL  = 'https://www.thewellbuild.com/products/single-session-strategy-call';
+const SERVICES = {
+  strategy:     { name: 'Strategy Call', prices: [999, 999, 999, 999], from: false,
+                  blurb: 'A one-on-one call to answer a specific question or decision.' },
+  spec_book:    { name: 'The Well Build Spec Book', prices: [4750, 4750, null, null], from: false,
+                  blurb: 'A written review of your drawings, with our recommendations and material specifications for key areas of your home. Typically delivered in 7–10 business days.' },
+  master_plan:  { name: 'The Well Build Master Plan', prices: [18000, 21000, 25000, null], from: true,
+                  blurb: 'We work with you, your architect and your builder over several weeks to develop your complete pre-construction healthy home roadmap.' },
+  build_phase:  { name: 'Build Phase Advisory', prices: [50000, 60000, 70000, null], from: true,
+                  blurb: 'The Master Plan, plus oversight from foundation through pre-drywall, where building-science decisions matter most.' },
+  full_service: { name: 'Full-Service Consulting', prices: [65000, 75000, 85000, null], from: true,
+                  blurb: 'We stay with you from early planning through move-in, coordinating decisions across every system.' }
+};
+const SERVICE_ORDER = ['strategy', 'spec_book', 'master_plan', 'build_phase', 'full_service'];
+const CALL_SERVICES = ['master_plan', 'build_phase', 'full_service'];
+
+function sqftTier() {
+  return ({ 'Under 3,000': 0, '3,000–4,999': 0, '5,000–7,499': 1, '7,500–9,999': 2, '10,000+': 3 })[STATE.responses.sq_ft] ?? 0;
+}
+function priceFor(key) { return SERVICES[key].prices[sqftTier()]; }
+function priceLabel(key) {
+  const p = priceFor(key);
+  if (p == null) return 'Inquire';
+  return (key === 'spec_book' ? 'From ' : '') + '$' + p.toLocaleString('en-US');
+}
+function budgetCap() {
+  return ({ 'Under $5K': 5000, '$5K–$10K': 10000, '$10K–$25K': 25000, '$25K–$50K': 50000, '$50K+': Infinity })[STATE.responses.consulting_budget] ?? null;
+}
+function supportKey() {
+  const s = String(STATE.responses.support_type || '');
+  if (s.startsWith('A written review')) return 'spec_book';
+  if (s.startsWith('Hands-on guidance')) return 'master_plan';
+  if (s.startsWith('Oversight during construction')) return 'construction';
+  if (s.startsWith('Help with one specific')) return 'strategy';
+  return 'unsure';
+}
+function affordable(key) {
+  const cap = budgetCap(), p = priceFor(key);
+  return cap == null || p == null || p <= cap;
+}
+
+// Returns { key, reasons[] }. Reasons are shown to the client and sent to us.
+function recommend() {
+  const r = STATE.responses;
+  const types = [].concat(r.project_type || []);
+  const drawings = ['Early design', 'Permit set', 'Construction set'].includes(r.design_stage);
+  const late = ['Permit set', 'Construction set'].includes(r.design_stage);
+  const minorOnly = types.length === 1 && types[0] === 'Minor renovation / remodel';
+  const want = supportKey();
+  const reasons = [];
+  const fallback = () => drawings && affordable('spec_book') ? 'spec_book' : 'strategy';
+
+  if (want === 'strategy' || minorOnly) {
+    if (minorOnly) reasons.push('For a minor renovation, a focused call usually covers what you need.');
+    else reasons.push('You have a specific question, and a call is the fastest way to answer it.');
+    return { key: 'strategy', reasons };
+  }
+  if (want === 'spec_book') {
+    if (drawings) { reasons.push('You have drawings and want a written review, which is exactly what the Spec Book is.'); return { key: 'spec_book', reasons }; }
+    reasons.push('The Spec Book reviews existing drawings. Until yours are ready, a call can help you set direction.');
+    return { key: 'strategy', reasons };
+  }
+  if (want === 'master_plan') {
+    if (affordable('master_plan')) { reasons.push('You want hands-on guidance with your architect and builder before construction.'); return { key: 'master_plan', reasons }; }
+    const k = fallback();
+    reasons.push('The Master Plan is above the budget you shared, so we suggest starting here.');
+    return { key: k, reasons };
+  }
+  if (want === 'construction') {
+    const pick = late ? 'build_phase' : 'full_service';
+    if (affordable(pick)) {
+      reasons.push(late ? 'Your drawings are far enough along that the focus is on getting them built right.'
+                        : 'You\'re early enough that we can guide the project from planning through move-in.');
+      return { key: pick, reasons };
+    }
+    if (affordable('master_plan')) { reasons.push('Construction oversight is above the budget you shared. The Master Plan gets the key decisions right before you build.'); return { key: 'master_plan', reasons }; }
+    reasons.push('Construction oversight is above the budget you shared, so we suggest starting here.');
+    return { key: fallback(), reasons };
+  }
+  // Not sure: use budget and drawings
+  const cap = budgetCap();
+  let k;
+  if (cap == null) k = fallback();
+  else if (!late && affordable('full_service') && cap >= 65000) k = 'full_service';
+  else if (late && affordable('build_phase') && cap >= 50000) k = 'build_phase';
+  else if (affordable('master_plan') && cap >= 18000) k = 'master_plan';
+  else k = fallback();
+  reasons.push('Based on where your drawings are and the budget you shared.');
+  return { key: k, reasons };
+}
+
+let RECO = null;          // { key, reasons }
+let CHOSEN = null;        // service key the client selected
+
+function nextStepFor(key) {
+  if (key === 'spec_book' && priceFor('spec_book') != null) return 'spec_book_checkout';
+  if (key === 'strategy') return 'strategy_call_checkout';
+  return 'call_request';
+}
+
+function renderRecommendation() {
+  const panel = document.getElementById('recoPanel');
+  const rec = SERVICES[RECO.key];
+  const chosen = CHOSEN || RECO.key;
+  const step = nextStepFor(chosen);
+  const overBudget = !affordable(chosen);
+  const rows = SERVICE_ORDER.map(k => `
+    <button type="button" class="svc" data-svc="${k}" aria-pressed="${k === chosen}">
+      <span class="dot"></span>
+      <span class="flex-1 min-w-0">
+        <span class="flex flex-wrap items-baseline justify-between gap-x-3">
+          <span class="font-semibold text-twb-green">${SERVICES[k].name}${k === RECO.key ? '<span class="tag-rec">Recommended</span>' : ''}</span>
+          <span class="svc-price">${priceLabel(k)}</span>
+        </span>
+        <span class="block text-sm text-twb-text mt-1">${SERVICES[k].blurb}</span>
+      </span>
+    </button>`).join('');
+
+  let cta;
+  if (step === 'spec_book_checkout') {
+    cta = `<button id="ctaPrimary" class="btn-copper text-base">Buy the Spec Book · ${priceLabel('spec_book')} →</button>
+           <p class="text-xs text-twb-mute mt-2">We'll save your answers so you don't have to repeat them.</p>`;
+  } else if (step === 'strategy_call_checkout') {
+    cta = `<button id="ctaPrimary" class="btn-copper text-base">Book a strategy call · $999 →</button>
+           <p class="text-xs text-twb-mute mt-2">We'll save your answers so we can prepare for the call.</p>`;
+  } else {
+    cta = `<button id="ctaPrimary" class="btn-copper text-base">Request a call about the ${SERVICES[chosen].name.replace('The Well Build ', '')} →</button>
+           <p class="text-xs text-twb-mute mt-2">We'll review your answers and email you within a few business days to set up a time.</p>`;
+  }
+
+  panel.innerHTML = `
+    <div class="text-xs uppercase tracking-widest text-twb-copper font-semibold mb-1">Our recommendation</div>
+    <h2 class="text-2xl mb-2">${rec.name}</h2>
+    <p class="text-twb-text mb-4">${RECO.reasons.join(' ')}</p>
+    <div class="text-sm font-semibold text-twb-green mb-2">Pricing for a home your size</div>
+    <div class="space-y-2 mb-3">${rows}</div>
+    <p class="text-xs text-twb-mute mb-5">Prices are based on the square footage you entered. Choose a different service above if you prefer.</p>
+    ${overBudget ? `<p class="text-sm mb-4" style="color:#A8593E">This is above the consulting budget you shared. You're welcome to continue, and we'll talk it through.</p>` : ''}
+    ${cta}
+    <div class="mt-4"><button id="recoBack" class="btn-ghost text-sm">← Edit my answers</button></div>`;
+
+  panel.querySelectorAll('[data-svc]').forEach(b => b.addEventListener('click', () => { CHOSEN = b.dataset.svc; renderRecommendation(); }));
+  document.getElementById('ctaPrimary').addEventListener('click', () => submitForm(step));
+  document.getElementById('recoBack').addEventListener('click', hideRecommendation);
+}
+function showRecommendation() {
+  if (!validateRequired()) return;
+  RECO = recommend();
+  CHOSEN = null;
+  document.getElementById('recoIntro').classList.add('hidden');
+  document.getElementById('recoPanel').classList.remove('hidden');
+  renderRecommendation();
+  document.getElementById('recoPanel').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+function hideRecommendation() {
+  document.getElementById('recoIntro').classList.remove('hidden');
+  document.getElementById('recoPanel').classList.add('hidden');
+}
+
+function showDone(step) {
+  const msg = document.getElementById('doneDefault');
+  const box = document.getElementById('specBookFit');
+  box.classList.add('hidden');
+  if (step === 'spec_book_checkout' || step === 'strategy_call_checkout') {
+    const url = step === 'spec_book_checkout' ? SPEC_BOOK_URL : STRATEGY_CALL_URL;
+    msg.textContent = 'Your answers are saved. Taking you to checkout…';
+    document.getElementById('doneOverlay').classList.remove('hidden');
+    if (APPS_SCRIPT_URL) setTimeout(() => { location.href = url; }, 1200);
+    else msg.textContent += ' (DRAFT preview: would go to ' + url + ')';
+    return;
+  }
+  msg.textContent = `Thank you. We'll review your answers and email you within a few business days to set up a call about ${SERVICES[CHOSEN || (RECO && RECO.key) || 'master_plan'].name}.`;
+  document.getElementById('doneOverlay').classList.remove('hidden');
+}
 
 async function postJson(body) {
   // Apps Script Web Apps don't support CORS preflight, so send as text/plain
