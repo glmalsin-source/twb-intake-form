@@ -165,7 +165,7 @@
     </p>
     <ul class="space-y-2 text-sm text-twb-text mb-5">
       <li class="flex gap-2"><span class="text-twb-green flex-shrink-0">●</span><span>Roughly <strong>3 minutes</strong> to fill out.</span></li>
-      <li class="flex gap-2"><span class="text-twb-green flex-shrink-0">●</span><span>At the end, we'll recommend a service and show pricing for a home your size.</span></li>
+      <li class="flex gap-2"><span class="text-twb-green flex-shrink-0">●</span><span>At the end, we'll recommend the service that fits your project.</span></li>
     </ul>
     <div class="flex flex-wrap gap-3">
       <button id="introStart" class="btn-primary">Start →</button>
@@ -259,7 +259,7 @@
       <div id="recoIntro" class="bg-twb-cream2 border border-twb-sage2 rounded-2xl p-6">
         <h2 class="text-2xl mb-2">See which service fits</h2>
         <p class="text-twb-text mb-4">
-          Based on your answers, we'll recommend a service and show what each one costs for a home your size.
+          Based on your answers, we'll recommend the service that fits your project.
         </p>
         <button id="recoBtn" class="btn-copper text-base">See my recommendation →</button>
       </div>
@@ -1459,7 +1459,7 @@ function buildSubmissionPayload() {
     recommended_service: RECO ? SERVICES[RECO.key].name : '',
     chosen_service: chosen ? SERVICES[chosen].name : '',
     quoted_price: chosen ? priceLabel(chosen) : '',
-    next_step: ({ spec_book_checkout: 'Went to Spec Book checkout', strategy_call_checkout: 'Went to strategy call checkout', call_request: 'Requested a call' })[_nextStep] || '',
+    next_step: ({ spec_book_checkout: 'Went to Spec Book checkout', strategy_call_checkout: 'Went to strategy call checkout', call_request: 'Requested a call', viewed: 'Saw recommendation, has not chosen yet' })[_nextStep] || '',
     budget_fit: !chosen ? '' : (budgetCap() == null ? 'Budget not shared' : (affordable(chosen) ? 'Within budget' : 'Above stated budget')),
     recommendation_reason: RECO ? RECO.reasons.join(' ') : ''
   };
@@ -1520,11 +1520,13 @@ async function submitForm(nextStep) {
     const res = await postJson({
       action: 'submit',
       draftId: STATE.draftId,
+      leadId: ensureLeadId(),
       payload: buildSubmissionPayload()
     });
     if (res && res.ok) {
       // Clear local draft so a fresh visit starts clean
       localStorage.removeItem(STORAGE_KEY);
+      try { localStorage.removeItem(LEAD_KEY); } catch(e) {}
       // Strip ?draft from URL
       if (location.search.includes('draft=')) {
         history.replaceState({},'',location.pathname);
@@ -1577,6 +1579,11 @@ function priceLabel(key) {
   const p = priceFor(key);
   if (p == null) return 'Inquire';
   return (key === 'spec_book' ? 'From ' : '') + '$' + p.toLocaleString('en-US');
+}
+// What the client sees. Master Plan and up are quoted on a call, so no number on screen.
+// priceLabel() still carries the tier price into the email and Sheet for Greg and Rachel.
+function displayPrice(key) {
+  return CALL_SERVICES.includes(key) ? 'Custom quote after a call' : priceLabel(key);
 }
 function budgetCap() {
   return ({ 'Under $5K': 5000, '$5K–$10K': 10000, '$10K–$25K': 25000, '$25K–$50K': 50000, '$50K+': Infinity })[STATE.responses.consulting_budget] ?? null;
@@ -1658,14 +1665,15 @@ function renderRecommendation() {
   const rec = SERVICES[RECO.key];
   const chosen = CHOSEN || RECO.key;
   const step = nextStepFor(chosen);
-  const overBudget = !affordable(chosen);
+  // Call services have no price on screen, so no over-budget warning either; we cover fit on the call.
+  const overBudget = !CALL_SERVICES.includes(chosen) && !affordable(chosen);
   const rows = SERVICE_ORDER.map(k => `
     <button type="button" class="svc" data-svc="${k}" aria-pressed="${k === chosen}">
       <span class="dot"></span>
       <span class="flex-1 min-w-0">
         <span class="flex flex-wrap items-baseline justify-between gap-x-3">
           <span class="font-semibold text-twb-green">${SERVICES[k].name}${k === RECO.key ? '<span class="tag-rec">Recommended</span>' : ''}</span>
-          <span class="svc-price">${priceLabel(k)}</span>
+          <span class="svc-price">${displayPrice(k)}</span>
         </span>
         <span class="block text-sm text-twb-text mt-1">${SERVICES[k].blurb}</span>
       </span>
@@ -1687,9 +1695,9 @@ function renderRecommendation() {
     <div class="text-xs uppercase tracking-widest text-twb-copper font-semibold mb-1">Our recommendation</div>
     <h2 class="text-2xl mb-2">${rec.name}</h2>
     <p class="text-twb-text mb-4">${RECO.reasons.join(' ')}</p>
-    <div class="text-sm font-semibold text-twb-green mb-2">Pricing for a home your size</div>
+    <div class="text-sm font-semibold text-twb-green mb-2">Ways we can help</div>
     <div class="space-y-2 mb-3">${rows}</div>
-    <p class="text-xs text-twb-mute mb-5">Prices are based on the square footage you entered. Choose a different service above if you prefer.</p>
+    <p class="text-xs text-twb-mute mb-5">Choose a different service above if you prefer. Larger engagements are scoped to your home and quoted after a call.</p>
     ${overBudget ? `<p class="text-sm mb-4" style="color:#A8593E">This is above the consulting budget you shared. You're welcome to continue, and we'll talk it through.</p>` : ''}
     ${cta}
     <div class="mt-4"><button id="recoBack" class="btn-ghost text-sm">← Edit my answers</button></div>`;
@@ -1698,10 +1706,36 @@ function renderRecommendation() {
   document.getElementById('ctaPrimary').addEventListener('click', () => submitForm(step));
   document.getElementById('recoBack').addEventListener('click', hideRecommendation);
 }
+// One id per person so the "saw recommendation" row and the later checkout/call
+// click land on the same Sheet row. Kept in localStorage so a reload keeps it.
+const LEAD_KEY = 'twb_intake_lead_id';
+let LEAD_ID = null;
+function ensureLeadId() {
+  if (LEAD_ID) return LEAD_ID;
+  try { LEAD_ID = localStorage.getItem(LEAD_KEY); } catch(e) {}
+  if (!LEAD_ID) {
+    LEAD_ID = (crypto.randomUUID ? crypto.randomUUID() : 'L' + Date.now() + Math.random().toString(36).slice(2));
+    try { localStorage.setItem(LEAD_KEY, LEAD_ID); } catch(e) {}
+  }
+  return LEAD_ID;
+}
+// Fire-and-forget: emails Greg + Rachel every answer and the suggestion the moment
+// the recommendation appears, so people who leave at the pricing screen aren't lost.
+function sendLead() {
+  if (!APPS_SCRIPT_URL) return;
+  const prev = _nextStep;
+  _nextStep = 'viewed';
+  const payload = buildSubmissionPayload();
+  _nextStep = prev;
+  postJson({ action: 'lead', draftId: STATE.draftId, leadId: ensureLeadId(), payload })
+    .catch(e => console.warn('lead send failed', e));
+}
+
 function showRecommendation() {
   if (!validateRequired()) return;
   RECO = recommend();
   CHOSEN = null;
+  sendLead();
   document.getElementById('recoIntro').classList.add('hidden');
   document.getElementById('recoPanel').classList.remove('hidden');
   renderRecommendation();
