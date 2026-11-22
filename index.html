@@ -195,6 +195,10 @@
       we are currently being selective with new projects. We will review your form and reach out
       if there's a potential fit.
     </p>
+    <div id="bookCall" class="hidden mb-5">
+      <a href="https://calendar.app.google/EtX9csLdGJknXrxX9" target="_blank" rel="noopener" class="btn-copper text-base inline-block">Pick a time for your call →</a>
+      <p class="text-xs text-twb-mute mt-2">Free intro call. If none of the times work, we'll email you to find one.</p>
+    </div>
     <div class="bg-twb-cream rounded-xl p-4 text-left text-sm mb-5">
       <div class="font-semibold text-twb-green mb-2">A couple notes</div>
       <ul class="list-disc pl-5 space-y-1 text-twb-text">
@@ -1750,6 +1754,7 @@ function showDone(step) {
   const msg = document.getElementById('doneDefault');
   const box = document.getElementById('specBookFit');
   box.classList.add('hidden');
+  document.getElementById('bookCall').classList.add('hidden');
   if (step === 'spec_book_checkout' || step === 'strategy_call_checkout') {
     const url = step === 'spec_book_checkout' ? SPEC_BOOK_URL : STRATEGY_CALL_URL;
     msg.textContent = 'Your answers are saved. Taking you to checkout…';
@@ -1758,7 +1763,8 @@ function showDone(step) {
     else msg.textContent += ' (DRAFT preview: would go to ' + url + ')';
     return;
   }
-  msg.textContent = `Thank you. We'll review your answers and email you within a few business days to set up a call about ${SERVICES[CHOSEN || (RECO && RECO.key) || 'master_plan'].name}.`;
+  msg.textContent = `Thank you. Pick a time below for a free intro call about ${SERVICES[CHOSEN || (RECO && RECO.key) || 'master_plan'].name}. We'll read your answers before we talk.`;
+  document.getElementById('bookCall').classList.remove('hidden');
   document.getElementById('doneOverlay').classList.remove('hidden');
 }
 
